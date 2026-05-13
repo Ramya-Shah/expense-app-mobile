@@ -2,6 +2,7 @@
   "expo": {
     "name": "expense-tracker",
     "slug": "expense-tracker",
+    "scheme": "expensetracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,10 +22,36 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.imramya.expensetracker"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "QuickAdd",
+              "label": "Quick Add Expense",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "description": "Quickly add an expense",
+              "previewImage": "./assets/icon.png",
+              "resizeMode": "none"
+            }
+          ]
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1b17a39a-1aa5-4ba8-aa20-b9bd6f6b9c02"
+      }
     }
   }
 }
