@@ -1,11 +1,10 @@
-import React, { useContext, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useContext, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppContext } from '../context/AppContext';
 import { colors } from '../theme/colors';
 import { MonthSelector } from '../components/MonthSelector';
-import { Card } from '../components/Card';
 import { TransactionItem } from '../components/TransactionItem';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -16,6 +15,7 @@ type Props = {
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { state } = useContext(AppContext);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { totalIncome, totalExpense } = useMemo(() => {
     let income = 0;
@@ -28,6 +28,25 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   }, [state.transactions]);
 
   const balance = totalIncome - totalExpense;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredTransactions = useMemo(() => {
+    if (!normalizedQuery) {
+      return state.transactions.slice(0, 10);
+    }
+
+    return state.transactions.filter((transaction) => {
+      const searchableValues = [
+        transaction.category,
+        transaction.description,
+        transaction.date,
+        transaction.type,
+        transaction.amount.toFixed(2),
+      ];
+
+      return searchableValues.some((value) => value.toLowerCase().includes(normalizedQuery));
+    });
+  }, [normalizedQuery, state.transactions]);
 
   return (
     <View style={styles.container}>
@@ -57,9 +76,38 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       </LinearGradient>
 
       <Text style={styles.sectionTitle}>Recent Transactions</Text>
+
+      <View style={styles.searchContainer}>
+        <MaterialCommunityIcons
+          name="magnify"
+          size={20}
+          color={colors.textSecondary}
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by category, note, date, amount..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="never"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+            style={styles.clearSearchButton}
+          >
+            <MaterialCommunityIcons name="close-circle" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+      </View>
       
       <FlatList
-        data={state.transactions.slice(0, 10)} // Show last 10
+        data={filteredTransactions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TransactionItem 
@@ -68,7 +116,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           />
         )}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={<Text style={styles.emptyText}>No transactions this month.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {normalizedQuery ? 'No transactions match this search.' : 'No transactions this month.'}
+          </Text>
+        }
       />
 
       <TouchableOpacity 
@@ -137,6 +189,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 12,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.text,
+    paddingVertical: 14,
+    fontSize: 15,
+  },
+  clearSearchButton: {
+    paddingLeft: 8,
+    paddingVertical: 8,
   },
   listContent: {
     paddingBottom: 80, // for FAB

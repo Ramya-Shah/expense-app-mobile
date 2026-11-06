@@ -17,27 +17,55 @@ export const BudgetScreen: React.FC<Props> = ({ navigation }) => {
   const { state } = useContext(AppContext);
 
   const budgetData = useMemo(() => {
-    // Only show categories that have transactions this month, or all custom categories
     return state.categories.map(cat => {
       const spent = state.transactions
         .filter(t => t.category === cat.name && t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
+      const budget = state.budgets.find(b => b.category === cat.name);
+      const limit_amount = budget ? budget.limit_amount : 0;
+
       return {
         category: cat.name,
         spent,
+        limit_amount,
       };
     }).sort((a, b) => b.spent - a.spent);
-  }, [state.categories, state.transactions]);
+  }, [state.categories, state.transactions, state.budgets]);
 
   const renderItem = ({ item }: { item: typeof budgetData[0] }) => {
+    const progress = item.limit_amount > 0 ? Math.min(item.spent / item.limit_amount, 1) : 0;
+    const overBudget = item.limit_amount > 0 && item.spent > item.limit_amount;
+
     return (
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.categoryName}>{item.category}</Text>
-          <Text style={styles.spendAmount}>₹{item.spent.toFixed(2)}</Text>
-        </View>
-      </Card>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('EditBudget', {
+            category: item.category,
+            limit_amount: item.limit_amount,
+            month: state.currentMonth,
+          })
+        }
+      >
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.categoryName}>{item.category}</Text>
+            <Text style={[styles.spendAmount, overBudget && { color: colors.expense }]}>
+              ₹{item.spent.toFixed(2)}
+            </Text>
+          </View>
+          {item.limit_amount > 0 ? (
+            <>
+              <ProgressBar progress={progress} />
+              <Text style={styles.limitText}>
+                Budget: ₹{item.limit_amount.toFixed(2)}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.limitText}>Tap to set a budget</Text>
+          )}
+        </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -80,7 +108,12 @@ const styles = StyleSheet.create({
   spendAmount: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.expense,
+    color: colors.text,
+  },
+  limitText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 6,
   },
   emptyText: {
     textAlign: 'center',

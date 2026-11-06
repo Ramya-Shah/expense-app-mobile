@@ -59,8 +59,8 @@ export const InsightsScreen = () => {
             />
             
             <View style={styles.legendContainer}>
-              {chartData.map((item, index) => (
-                <View key={index} style={styles.legendItem}>
+              {chartData.map((item) => (
+                <View key={item.text} style={styles.legendItem}>
                   <View style={[styles.legendColor, { backgroundColor: item.color }]} />
                   <Text style={styles.legendText}>{item.text} (₹{item.value.toFixed(0)})</Text>
                 </View>

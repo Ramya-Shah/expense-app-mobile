@@ -22,7 +22,7 @@ export type RootStackParamList = {
   EditTransaction: { transactionId: number };
   AddGoal: undefined;
   GoalDetail: { goalId: number };
-  EditBudget: { category: string; limit: number; month: string };
+  EditBudget: { category: string; limit_amount: number; month: string };
 };
 
 export type MainTabParamList = {
